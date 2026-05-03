@@ -1,3 +1,5 @@
+- Add P010 (10-bit) flatbuffer wire format variant for HDR-capable clients - v22beta2 🆕
+   - New `P010Image` table in `hyperhdr_request.fbs` lets HDR-capable clients (e.g. Android grabber on API 33+) deliver 10-bit Microsoft P010 frames directly into HyperHDR's existing FrameDecoder/LUT tone-map pipeline (the same one V4L2 and Windows MF/DX grabbers feed). Existing NV12 and RawImage clients are unaffected — the change is purely additive.
 - RGBW with Temporal Dithering - powered by Infinite Color Engine (#1483) - v22beta2 🆕
    - Temporal Dithering: Improved Precision and Adaptive Stabilization (#1490) - v22beta2 🆕
    - Add RGBW dithering for legacy RPi PWM & SPI sk6812 driver (#1498) - v22beta2 🆕
