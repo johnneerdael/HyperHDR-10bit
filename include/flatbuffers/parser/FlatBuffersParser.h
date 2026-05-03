@@ -32,7 +32,7 @@
 namespace FlatBuffersParser
 {
 	enum FLATBUFFERS_PACKAGE_TYPE { COLOR = 1, IMAGE, CLEAR, PRIORITY, ERROR };
-	enum FLATBUFFERS_IMAGE_FORMAT { RGB = 1, NV12 };
+	enum FLATBUFFERS_IMAGE_FORMAT { RGB = 1, NV12, P010 };
 
 	struct FlatbuffersColor
 	{
