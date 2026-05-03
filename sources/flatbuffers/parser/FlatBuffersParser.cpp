@@ -209,6 +209,27 @@ int FlatBuffersParser::decodeIncomingFlatbuffersFrame(void* builder, const uint8
 				auto reply = hyperhdrnet::CreateReplyDirect(*_builder, nullptr, -1, *priority);
 				_builder->Finish(reply);
 			}
+			else if ((rawFlatImage = flatImage->data_as_P010Image()) != nullptr)
+			{
+				const auto* img = static_cast<const hyperhdrnet::P010Image*>(rawFlatImage);
+				const auto& imgD = img->data_y();
+				const auto& imgUvD = img->data_uv();
+
+				image.format = FLATBUFFERS_IMAGE_FORMAT::P010;
+				image.firstPlane.data = const_cast<uint8_t*>(imgD->data());
+				image.firstPlane.size = static_cast<int>(imgD->size());
+				image.firstPlane.stride = img->stride_y();
+				image.secondPlane.data = const_cast<uint8_t*>(imgUvD->data());
+				image.secondPlane.size = static_cast<int>(imgUvD->size());
+				image.secondPlane.stride = img->stride_uv();
+				image.size = imgD->size() + imgUvD->size();
+				image.width = img->width();
+				image.height = img->height();
+
+				retType = FLATBUFFERS_PACKAGE_TYPE::IMAGE;
+				auto reply = hyperhdrnet::CreateReplyDirect(*_builder, nullptr, -1, *priority);
+				_builder->Finish(reply);
+			}
 			else
 				sendErrorReply(_builder, NO_IMAGE_DATA);
 		}
