@@ -425,6 +425,47 @@ void FlatBuffersServer::handlerImageReceived(int priority, FlatBuffersParser::Fl
 			emit GlobalSignals::getInstance()->SignalSetGlobalImage(priority, image, timeout_ms, origin, clientDescription);
 		}
 	}
+	else if (flatImage->format == FlatBuffersParser::FLATBUFFERS_IMAGE_FORMAT::P010)
+	{
+		if (_currentLutPixelFormat != PixelFormat::P010)
+		{
+			_currentLutPixelFormat = PixelFormat::P010;
+			loadLutFile();
+
+			Debug(_log, "Received first P010 frame. First plane size: {:d} (stride: {:d}). Second plane size: {:d} (stride: {:d}). Image size: {:d} ({:d} x {:d})",
+				flatImage->firstPlane.size, flatImage->firstPlane.stride,
+				flatImage->secondPlane.size, flatImage->secondPlane.stride,
+				flatImage->size, flatImage->width, flatImage->height);
+		}
+
+		if (!_lutBufferInit)
+		{
+			requestLUT();
+		}
+		else if (flatImage->size != (flatImage->width * flatImage->height * 3) || flatImage->size == 0)
+		{
+			// P010 carries 16 bits per Y sample (2 bytes) and 16 bits per Cb/Cr sample at half resolution:
+			// W*H*2 (Y plane) + W*H (UV plane interleaved Cb/Cr at half-res, 2 bytes each) = W*H*3 bytes total.
+			Error(_log, "The P010 image data size ({:d}) does not match the width and height ({:d}) or it's empty", flatImage->size, (flatImage->width * flatImage->height * 3));
+		}
+		else if ((flatImage->firstPlane.stride != flatImage->secondPlane.stride) ||
+			(flatImage->firstPlane.stride != 0 && flatImage->firstPlane.stride != flatImage->width * 2))
+		{
+			// P010 stride is in bytes — width*2 because each sample is 2 bytes (10 high bits + 6 zero pad).
+			Error(_log, "The P010 image data contains incorrect stride size: {:d} and {:d}, expected {:d} or 0",
+						flatImage->firstPlane.stride, flatImage->secondPlane.stride, flatImage->width * 2);
+		}
+		else
+		{
+			Image<ColorRgb> image(flatImage->width, flatImage->height);
+
+			FrameDecoder::dispatchProcessImageVector[_quarterOfFrameMode][_hdrToneMappingEnabled][false](
+				0, 0, 0, 0,
+				flatImage->firstPlane.data, flatImage->secondPlane.data, flatImage->width, flatImage->height, flatImage->width, PixelFormat::P010, _lut.data(), image, nullptr);
+
+			emit GlobalSignals::getInstance()->SignalSetGlobalImage(priority, image, timeout_ms, origin, clientDescription);
+		}
+	}
 	else
 	{
 		Error(_log, "Unsupported flatbuffers image format");
