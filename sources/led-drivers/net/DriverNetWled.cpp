@@ -216,15 +216,28 @@ QJsonObject DriverNetWled::discover(const QJsonObject& /*params*/)
 	std::shared_ptr<DiscoveryWrapper> bonInstance = _discoveryWrapper.lock();
 	if (bonInstance != nullptr)
 	{
-		QList<DiscoveryRecord> recs;
+		QList<DiscoveryRecord> recs, hyperkRecs;
 
 		SAFE_CALL_0_RET(bonInstance.get(), getWLED, QList<DiscoveryRecord>, recs);
+		// Fire the Hyperk browse too so cross-protocol devices can be flagged in the
+		// list. Both browses are async; the second call won't block but it does ensure
+		// the Hyperk cache gets refreshed on the same user action.
+		SAFE_CALL_0_RET(bonInstance.get(), getHyperk, QList<DiscoveryRecord>, hyperkRecs);
 
 		for (DiscoveryRecord& r : recs)
 		{
 			QJsonObject newIp;
 			newIp["value"] = QString("%1").arg(r.address);
-			newIp["name"] = QString("%1 (%2)").arg(newIp["value"].toString()).arg(r.hostName);
+			QString label = QString("%1 (%2)").arg(newIp["value"].toString()).arg(r.hostName);
+			for (const DiscoveryRecord& h : hyperkRecs)
+			{
+				if (h.address == r.address)
+				{
+					label += " — also speaks Hyperk";
+					break;
+				}
+			}
+			newIp["name"] = label;
 			deviceList.push_back(newIp);
 		}
 	}

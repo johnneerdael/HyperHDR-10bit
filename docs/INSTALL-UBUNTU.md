@@ -25,7 +25,13 @@ sudo apt install -y \
   libasound2-dev libayatana-appindicator3-dev \
   libegl-dev libgl-dev libglvnd-dev libgtk-3-dev libx11-dev \
   libpipewire-0.3-dev libsystemd-dev \
-  libftdi1-dev libturbojpeg0-dev libusb-1.0-0-dev
+  libftdi1-dev libusb-1.0-0-dev
+```
+
+The TurboJPEG dev headers are packaged under different names on the two releases — 22.04 (jammy) ships `libturbojpeg0-dev`, 24.04 (noble) ships `libturbojpeg-dev`. Install whichever your release has:
+
+```bash
+sudo apt install -y libturbojpeg0-dev || sudo apt install -y libturbojpeg-dev
 ```
 
 Optional — Raspberry Pi CEC support:

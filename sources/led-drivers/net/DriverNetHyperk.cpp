@@ -189,15 +189,28 @@ QJsonObject DriverNetHyperk::discover(const QJsonObject& /*params*/)
 	std::shared_ptr<DiscoveryWrapper> bonInstance = _discoveryWrapper.lock();
 	if (bonInstance != nullptr)
 	{
-		QList<DiscoveryRecord> recs;
+		QList<DiscoveryRecord> recs, wledRecs;
 
 		SAFE_CALL_0_RET(bonInstance.get(), getHyperk, QList<DiscoveryRecord>, recs);
+		// Fire the WLED browse too so devices that advertise both services can be
+		// surfaced as such. Both browses are async; this just primes the WLED cache
+		// alongside the Hyperk one on the same user action.
+		SAFE_CALL_0_RET(bonInstance.get(), getWLED, QList<DiscoveryRecord>, wledRecs);
 
 		for (DiscoveryRecord& r : recs)
 		{
 			QJsonObject newIp;
 			newIp["value"] = QString("%1").arg(r.address);
-			newIp["name"] = QString("%1 (%2)").arg(newIp["value"].toString()).arg(r.hostName);
+			QString label = QString("%1 (%2)").arg(newIp["value"].toString()).arg(r.hostName);
+			for (const DiscoveryRecord& w : wledRecs)
+			{
+				if (w.address == r.address)
+				{
+					label += " — also speaks WLED";
+					break;
+				}
+			}
+			newIp["name"] = label;
 			deviceList.push_back(newIp);
 		}
 	}
