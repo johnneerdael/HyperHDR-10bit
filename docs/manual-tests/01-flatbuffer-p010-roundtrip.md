@@ -4,7 +4,9 @@
 
 ## Capability advertising
 
-This fork advertises P010 support to clients via `serverinfo`:
+This fork advertises P010 support to clients via `serverinfo`. The block
+lives under the `info` object of the `serverinfo` response — i.e.
+`info.flatbuffer.imageFormats` and `info.flatbuffer.wireVersion`:
 
 ```json
 "flatbuffer": {
@@ -16,6 +18,10 @@ This fork advertises P010 support to clients via `serverinfo`:
 Stock HyperHDR omits the `flatbuffer` block entirely. Clients are expected
 to treat absence as wire v1 (RawImage + NV12Image only) and gate any P010
 send path on `imageFormats` containing `"P010Image"`.
+
+Clients should ignore unknown `imageFormats` entries and treat any
+`wireVersion >= 2` as P010-capable as long as `imageFormats` lists
+`"P010Image"`.
 
 ## Regression check (NV12 still works)
 
