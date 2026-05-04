@@ -447,6 +447,20 @@ void HyperAPI::handleServerInfoCommand(const QJsonObject& message, const QString
 			info["hasCEC"] = 0;
 #endif
 
+            // Flatbuffer wire-format capabilities. Stock HyperHDR has no such block;
+            // clients treat its absence as v1 (RawImage + NV12Image only). The fork
+            // adds P010Image — see include/flatbuffers/parser/hyperhdr_request.fbs.
+            {
+                QJsonArray formats;
+                formats.append(QStringLiteral("RawImage"));
+                formats.append(QStringLiteral("NV12Image"));
+                formats.append(QStringLiteral("P010Image"));
+                QJsonObject flatbuf;
+                flatbuf["imageFormats"] = formats;
+                flatbuf["wireVersion"] = 2;
+                info["flatbuffer"] = flatbuf;
+            }
+
 			info["hostname"] = QHostInfo::localHostName();
 			info["lastError"] = Logger::getInstance()->getLastError();
 

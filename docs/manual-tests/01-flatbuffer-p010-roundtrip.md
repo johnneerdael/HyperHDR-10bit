@@ -2,6 +2,21 @@
 
 **Prereqs:** Built HyperHDR binary from this branch (`p010-wire-format`); a configured LED instance with a visible LED layout (e.g. four LEDs in a row); a client that can send a P010 frame over the flatbuffer port (default 19400). The simplest such client is the Android `HyperHDR-android` app once its v2 P010 client lands; until then, a small standalone test client works.
 
+## Capability advertising
+
+This fork advertises P010 support to clients via `serverinfo`:
+
+```json
+"flatbuffer": {
+  "imageFormats": ["RawImage", "NV12Image", "P010Image"],
+  "wireVersion": 2
+}
+```
+
+Stock HyperHDR omits the `flatbuffer` block entirely. Clients are expected
+to treat absence as wire v1 (RawImage + NV12Image only) and gate any P010
+send path on `imageFormats` containing `"P010Image"`.
+
 ## Regression check (NV12 still works)
 
 1. Run HyperHDR: `./build/bin/hyperhdr` (or your platform's launch path).
